@@ -41,6 +41,7 @@ pip install -r requirements.txt
 
 # Execute the full pipeline (Download -> Clean -> Enrich -> Export)
 python src/main.py
+```
 
 ## Project Structure
 
