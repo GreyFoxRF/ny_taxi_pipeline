@@ -69,14 +69,3 @@ def join_data(spark):
     )
     
     print("--> Процесс завершен. Данные материализованы.")
-
-
-
-if __name__ == "__main__":
-    spark_session = create_spark_session()
-    
-    try:
-        join_data(spark_session)
-    finally:
-        
-        spark_session.stop()

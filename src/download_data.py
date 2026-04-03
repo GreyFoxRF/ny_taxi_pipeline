@@ -10,16 +10,8 @@ URLS = [
 FILE_PATH = Path('data/raw/')
 
 def download_data(urls: list, save_path: Path):
-    option = input("""
-    !!!---choose download option---!!!
-    1 - full
-    2 - costum                 
-    """)
 
-    for url in urls:
-        if option == '2' and input(f'!!!---(1-yes/2-no)do you want to download data from {url}') == 2:
-            continue
-            
+    for url in urls:          
         print(f"--> Starting to download from {url}...")
         
         
@@ -35,6 +27,3 @@ def download_data(urls: list, save_path: Path):
                 f.write(chunk)
                 
         print(f"Downloading is completed to: {save_path}")
-
-if __name__ == '__main__':
-    download_data(URLS, FILE_PATH)
