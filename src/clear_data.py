@@ -1,16 +1,12 @@
 import pyspark.sql.functions as F
 from pathlib import Path
 
+# Абсолютный контроль путей
 BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DATA_PATH = str(BASE_DIR / 'data' / 'raw' / 'yellow_tripdata_2024-01.parquet')
 PROCESSED_DATA_PATH = str(BASE_DIR / 'data' / 'processed' / 'cleaned_yellow_tripdata')
 
 def clean_data(spark):
-    # Абсолютный контроль путей
-    BASE_DIR = Path(__file__).resolve().parent.parent
-    RAW_DATA_PATH = str(BASE_DIR / 'data' / 'raw' / 'yellow_tripdata_2024-01.parquet')
-    PROCESSED_DATA_PATH = str(BASE_DIR / 'data' / 'processed' / 'cleaned_yellow_tripdata')
-
     print("--> Загрузка сырья...")
     df = spark.read.parquet(RAW_DATA_PATH)
     

@@ -44,7 +44,7 @@ python src/main.py
 ```
 
 ## Project Structure
-
+```
 ny_taxi_pipeline/
 ├── data/
 │   ├── raw/                  # Downloaded raw datasets
@@ -59,3 +59,4 @@ ny_taxi_pipeline/
 │   └── spark_session.py      # Spark and Arrow configuration
 ├── requirements.txt          # Environment dependencies
 └── README.md                 # Project documentation
+```
