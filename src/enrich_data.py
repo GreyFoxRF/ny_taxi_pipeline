@@ -4,7 +4,9 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 from pyspark.sql.types import DecimalType
+from logger import setup_logger
 
+logger = setup_logger()
 
 # Абсолютный контроль путей
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,7 +15,7 @@ ZONES_FLAGS = str(BASE_DIR / 'data' / 'raw' / 'taxi+_zone_lookup.csv')
 REPORT_PATH = str(BASE_DIR / 'data' / 'report' / 'top_routes_mart')
 
 def join_data(spark):
-    print("--> Загрузка сырья...")
+    logger.info("--> Загрузка сырья...")
 
     zones_schema = StructType([
         StructField("LocationID", IntegerType(), True),
@@ -25,7 +27,7 @@ def join_data(spark):
     df_fact = spark.read.parquet(CLEARED_DATA_PATH)
     df_zone = spark.read.csv(ZONES_FLAGS, schema = zones_schema)
 
-    print("--> Активация процесса объединения данных данных...")
+    logger.info("--> Активация процесса объединения данных данных...")
 
     full_df =  df_fact.join(
         F.broadcast(df_zone).alias('pu'), on=(F.col('PULocationID') == F.col('pu.LocationID'))
@@ -59,7 +61,7 @@ def join_data(spark):
                 orderBy(F.col('part_of_day'), F.col('total_amount').desc())
     
 
-    print("--> Выгрузка витрины данных для бизнеса...")
+    logger.info("--> Выгрузка витрины данных для бизнеса...")
 
     full_df.coalesce(1).write.csv(
         REPORT_PATH,
@@ -68,4 +70,4 @@ def join_data(spark):
         sep=','
     )
     
-    print("--> Процесс завершен. Данные материализованы.")
+    logger.info("--> Процесс завершен. Данные материализованы.")

@@ -1,6 +1,9 @@
 import os
 import sys
 from pyspark.sql import SparkSession
+from logger import setup_logger
+
+logger = setup_logger()
 
 # Жесткая фиксация среды выполнения для Spark
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -12,7 +15,7 @@ os.environ['HADOOP_HOME'] = r'C:\hadoop'
 os.environ['PATH'] = os.environ['HADOOP_HOME'] + r'\bin;' + os.environ.get('PATH', '')
 
 def create_spark_session():
-    print("--> Инициализация ядра PySpark...")
+    logger.info("--> Инициализация ядра PySpark...")
     return SparkSession.builder \
         .appName("NYTaxiCleaner") \
         .config("spark.sql.execution.arrow.pyspark.enabled", "true") \

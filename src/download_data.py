@@ -1,5 +1,8 @@
 import requests
 from pathlib import Path
+from logger import setup_logger
+
+logger = setup_logger()
 
 URLS = [
     'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet',
@@ -12,7 +15,7 @@ FILE_PATH = Path('data/raw/')
 def download_data(urls: list, save_path: Path):
 
     for url in urls:          
-        print(f"--> Starting to download from {url}...")
+        logger.info(f"--> Starting to download from {url}...")
         
         
         response = requests.get(url, stream=True) 
@@ -26,4 +29,4 @@ def download_data(urls: list, save_path: Path):
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
                 
-        print(f"Downloading is completed to: {save_path}")
+        logger.info(f"Downloading is completed to: {save_path}")
