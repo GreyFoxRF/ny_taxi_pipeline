@@ -9,7 +9,6 @@ An optimized end-to-end ETL pipeline built with PySpark to process, clean, and a
 * **Language:** Python
 * **Big Data Processing:** PySpark (Spark SQL, DataFrame API) with Apache Arrow optimization
 * **Orchestration:** Custom Python entry point (`main.py`)
-* **Exploratory Data Analysis (EDA):** DuckDB, Jupyter Notebook
 * **Data Formats:** Parquet (intermediate storage), CSV (final business Data Mart)
 * **Infrastructure & Containerization: Docker
 
