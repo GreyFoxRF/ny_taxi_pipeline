@@ -1,5 +1,5 @@
-pandas
-pyarrow
-pyspark
+pandas==3.0.2
+pyarrow==23.0.1
+pyspark==4.1.1
 duckdb
-jupyter
+jupyter==1.1.1

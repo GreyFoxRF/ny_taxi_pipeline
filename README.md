@@ -11,6 +11,7 @@ An optimized end-to-end ETL pipeline built with PySpark to process, clean, and a
 * **Orchestration:** Custom Python entry point (`main.py`)
 * **Exploratory Data Analysis (EDA):** DuckDB, Jupyter Notebook
 * **Data Formats:** Parquet (intermediate storage), CSV (final business Data Mart)
+* **Infrastructure & Containerization: Docker
 
 ## Architecture & Engineering Decisions
 
@@ -33,14 +34,14 @@ An optimized end-to-end ETL pipeline built with PySpark to process, clean, and a
 
 ```bash
 # Clone the repository
-git clone <your-repo-link>
+git clone [https://github.com/GreyFoxRF/ny_taxi_pipeline.git](https://github.com/GreyFoxRF/ny_taxi_pipeline.git)
 cd ny_taxi_pipeline
 
-# Install dependencies
-pip install -r requirements.txt
+# Build the Docker image
+docker build -t ny_taxi_pipeline .
 
-# Execute the full pipeline (Download -> Clean -> Enrich -> Export)
-python src/main.py
+# Run the pipeline and extract the Data Mart to your local drive
+docker run --rm -v $(pwd)/data:/app/data ny_taxi_pipeline
 ```
 
 ## Project Structure

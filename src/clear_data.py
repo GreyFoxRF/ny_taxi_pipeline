@@ -31,5 +31,9 @@ def clean_data(spark):
 
     logger.info("--> Запись чистой витрины на диск...")
 
+    # check and create processed folder
+    target_dir = Path("/app/data/processed") 
+    target_dir.mkdir(parents=True, exist_ok=True)
+
     cleaned_df.write.mode("overwrite").parquet(PROCESSED_DATA_PATH)
     logger.info(f"!!! Операция завершена. Данные сохранены в {PROCESSED_DATA_PATH}")

@@ -24,6 +24,10 @@ def download_data(urls: list, save_path: Path):
         file_name = url.split('/')[-1]
         full_path = save_path / file_name
 
+        # check and create raw folder
+        target_dir = Path("/app/data/raw") 
+        target_dir.mkdir(parents=True, exist_ok=True)
+
         with open(full_path, 'wb') as f:
             # iter_content скачивает файл блоками по 8 КБ
             for chunk in response.iter_content(chunk_size=8192):

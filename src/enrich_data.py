@@ -63,6 +63,10 @@ def join_data(spark):
 
     logger.info("--> Выгрузка витрины данных для бизнеса...")
 
+    # check and create report folder
+    target_dir = Path("/app/data/report") 
+    target_dir.mkdir(parents=True, exist_ok=True)
+
     full_df.coalesce(1).write.csv(
         REPORT_PATH,
         header=True,
