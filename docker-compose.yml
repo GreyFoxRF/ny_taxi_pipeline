@@ -1,0 +1,32 @@
+services:
+  # Сервис базы данных
+  db:
+    image: postgres:15
+    container_name: taxi_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: fox
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: ny_taxi
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Твой ETL-пайплайн
+  spark_app:
+    build: .
+    container_name: taxi_pipeline_container
+    depends_on:
+      - db
+    volumes:
+      - ./data:/app/data
+    environment:
+      # Указываем приложению, где искать базу
+      DB_HOST: db
+      DB_USER: fox
+      DB_PASSWORD: password123
+      DB_NAME: ny_taxi
+
+volumes:
+  pgdata:

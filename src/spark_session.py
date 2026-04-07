@@ -15,4 +15,5 @@ def create_spark_session():
     return SparkSession.builder \
         .appName("NYTaxiCleaner") \
         .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
+        .config("spark.jars.packages", "org.postgresql:postgresql:42.7.3") \
         .getOrCreate()
