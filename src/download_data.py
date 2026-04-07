@@ -4,10 +4,6 @@ from logger import setup_logger
 
 logger = setup_logger()
 
-URLS = [
-    'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet',
-    'https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv'
-]
 
 
 FILE_PATH = Path('data/raw/')

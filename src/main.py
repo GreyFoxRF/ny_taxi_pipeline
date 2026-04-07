@@ -4,17 +4,33 @@ from spark_session import create_spark_session
 from enrich_data import join_data
 from pathlib import Path
 from logger import setup_logger
+from check_url import check_url
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--year', type=str, required=True, help='Год запуска пайплайна (например, 2024)')
+parser.add_argument('--month', type=str, required=True, help='Месяц запуска пайплайна (например, 01)')
 
 logger = setup_logger()
+args = parser.parse_args()
 
+if len(args.month) == 1:
+    args.month = f'0{args.month}'
+
+logger.info(f"Запуск для {args.year}-{args.month}")
+
+url = f'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{args.year}-{args.month}.parquet'
 URLS = [
-    'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet',
+    url,
     'https://d37ci6vzurychx.cloudfront.net/misc/taxi+_zone_lookup.csv'
 ]
 BASE_DIR = Path(__file__).resolve().parent.parent
 FILE_PATH = BASE_DIR / 'data' / 'raw'
 
 def run(spark):
+    if not check_url(URLS):
+        exit()
+
     logger.info("=== ЭТАП 2: ДОБЫЧА СЫРЬЯ ===")
     download_data(URLS, FILE_PATH)
 
@@ -22,7 +38,7 @@ def run(spark):
     clean_data(spark)
 
     logger.info("=== ЭТАП 4: ФОРМИРОВАНИЕ БИЗНЕС-ВИТРИНЫ ===")
-    join_data(spark)
+    join_data(spark, args.year, args.month)
 
 if __name__ == "__main__":
     logger.info("[ORCHESTRATOR] Инициализация генерального протокола...")

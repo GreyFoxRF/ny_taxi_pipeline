@@ -21,6 +21,7 @@ services:
       - db
     volumes:
       - ./data:/app/data
+      - ./src:/app/src    # <--- FOR TEST!
     environment:
       # Указываем приложению, где искать базу
       DB_HOST: db

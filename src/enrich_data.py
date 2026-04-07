@@ -12,9 +12,8 @@ logger = setup_logger()
 BASE_DIR = Path(__file__).resolve().parent.parent
 CLEARED_DATA_PATH = str(BASE_DIR / 'data' / 'processed' / 'cleaned_yellow_tripdata')
 ZONES_FLAGS = str(BASE_DIR / 'data' / 'raw' / 'taxi+_zone_lookup.csv')
-REPORT_PATH = str(BASE_DIR / 'data' / 'report' / 'top_routes_mart')
 
-def join_data(spark):
+def join_data(spark, year, month):
     logger.info("--> Загрузка сырья...")
 
     zones_schema = StructType([
@@ -64,11 +63,10 @@ def join_data(spark):
     logger.info("--> Выгрузка витрины данных для бизнеса...")
 
     # check and create report folder
-    target_dir = Path("/app/data/report") 
-    target_dir.mkdir(parents=True, exist_ok=True)
+    target_dir = Path(f"/app/data/report/report-{year}-{month}")
 
     full_df.coalesce(1).write.csv(
-        REPORT_PATH,
+        str(target_dir),
         header=True,
         mode='overwrite',
         sep=','
