@@ -1,11 +1,12 @@
 from download_data import download_data
 from clear_data import clean_data
 from spark_session import create_spark_session
-from enrich_data import join_data
+from enrich_data import enrich_data
 from pathlib import Path
 from logger import setup_logger
 from check_url import check_url
 import argparse
+from upload_data import upload_data
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--year', type=str, required=True, help='Год запуска пайплайна (например, 2024)')
@@ -37,8 +38,11 @@ def run(spark):
     logger.info("=== ЭТАП 3: ОЧИСТКА ДАННЫХ ===")
     clean_data(spark)
 
-    logger.info("=== ЭТАП 4: ФОРМИРОВАНИЕ БИЗНЕС-ВИТРИНЫ ===")
-    join_data(spark, args.year, args.month)
+    logger.info("=== STAGE 4: CREATING THE BUSINESS SHOWCASE ===")
+    df = enrich_data(spark, args.year, args.month)
+
+    logger.info("=== STAGE 5: Uploading the Business Data Mart to the Server ===")
+    upload_data(spark, df, args.year, args.month)
 
 if __name__ == "__main__":
     logger.info("[ORCHESTRATOR] Инициализация генерального протокола...")

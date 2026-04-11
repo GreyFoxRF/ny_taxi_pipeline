@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 from spark_session import create_spark_session
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 import pyspark.sql.functions as F
@@ -14,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 CLEARED_DATA_PATH = str(BASE_DIR / 'data' / 'processed' / 'cleaned_yellow_tripdata')
 ZONES_FLAGS = str(BASE_DIR / 'data' / 'raw' / 'taxi+_zone_lookup.csv')
 
-def join_data(spark, year, month):
+def enrich_data(spark, year, month):
     logger.info("--> Загрузка сырья...")
 
     zones_schema = StructType([
@@ -60,29 +59,8 @@ def join_data(spark, year, month):
                 withColumn('amount_for_mile', (F.col('total_amount') / F.col('sum_trip_distance')).cast(DecimalType(15, 2))).\
                 orderBy(F.col('part_of_day'), F.col('total_amount').desc())
     
-
-    logger.info("--> Uploading the Business Data Mart to the Server...")
-
-    # check and create report folder
-    target_dir = Path(f"/app/data/report/report-{year}-{month}")
-
-
-    db_host = os.getenv('DB_HOST')
-    db_user = os.getenv('DB_USER')
-    db_password = os.getenv('DB_PASSWORD')
-    db_name = os.getenv('DB_NAME')
-    
-    db_connector = f'jdbc:postgresql://{db_host}:5432/{db_name}'
-
-    full_df.coalesce(1).write.jdbc(
-        url=db_connector,
-        table='top_routes_mart',
-        mode='overwrite',
-        properties={
-            'user': db_user,
-            'password': db_password,
-            'driver': 'org.postgresql.Driver'
-        }
-    )
+    full_df = full_df.withColumn('year', F.lit(year)).withColumn('month', F.lit(month))
 
     logger.info("--> Процесс завершен. Данные материализованы.")
+
+    return full_df
