@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from spark_session import create_spark_session
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 import pyspark.sql.functions as F
@@ -60,16 +61,28 @@ def join_data(spark, year, month):
                 orderBy(F.col('part_of_day'), F.col('total_amount').desc())
     
 
-    logger.info("--> Выгрузка витрины данных для бизнеса...")
+    logger.info("--> Uploading the Business Data Mart to the Server...")
 
     # check and create report folder
     target_dir = Path(f"/app/data/report/report-{year}-{month}")
 
-    full_df.coalesce(1).write.csv(
-        str(target_dir),
-        header=True,
-        mode='overwrite',
-        sep=','
-    )
+
+    db_host = os.getenv('DB_HOST')
+    db_user = os.getenv('DB_USER')
+    db_password = os.getenv('DB_PASSWORD')
+    db_name = os.getenv('DB_NAME')
     
+    db_connector = f'jdbc:postgresql://{db_host}:5432/{db_name}'
+
+    full_df.coalesce(1).write.jdbc(
+        url=db_connector,
+        table='top_routes_mart',
+        mode='overwrite',
+        properties={
+            'user': db_user,
+            'password': db_password,
+            'driver': 'org.postgresql.Driver'
+        }
+    )
+
     logger.info("--> Процесс завершен. Данные материализованы.")
