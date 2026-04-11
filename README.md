@@ -1,62 +1,69 @@
 # NY Taxi Data Pipeline & Profitability Data Mart
 
-**Author:** Sergei Vashchuk | [LinkedIn](https://www.linkedin.com/in/sergei-vashchuk-33b390400/)
+**Author:** Sergei (Fox) Vashchuk | [LinkedIn](https://www.linkedin.com/in/sergei-vashchuk-33b390400/)
 
 ## Objective
-An optimized end-to-end ETL pipeline built with PySpark to process, clean, and analyze raw New York City Yellow Taxi transactional data. The core objective is to transform noisy, high-volume data into a clean, business-ready Data Mart (CSV) that identifies the most profitable taxi routes based on the time of day.
+An optimized, idempotent end-to-end ETL pipeline built with PySpark and Docker. It processes, cleans, and analyzes raw New York City Yellow Taxi transactional data. The core objective is to transform noisy, high-volume data into a clean, business-ready Data Mart stored in PostgreSQL, which identifies the most profitable taxi routes based on the time of day.
 
 ## Tech Stack
-* **Language:** Python
+* **Language:** Python 3.12
 * **Big Data Processing:** PySpark (Spark SQL, DataFrame API) with Apache Arrow optimization
-* **Orchestration:** Custom Python entry point (`main.py`)
-* **Data Formats:** Parquet (intermediate storage), CSV (final business Data Mart)
-* **Infrastructure & Containerization: Docker
+* **Database:** PostgreSQL 15 (via JDBC & psycopg2)
+* **Orchestration:** Custom Python entry point with CLI arguments (`main.py`)
+* **Infrastructure & Containerization:** Docker & Docker Compose
 
 ## Architecture & Engineering Decisions
 
-1. **Orchestration (`main.py`):**
-   * Designed a single entry point for the entire pipeline. The process runs end-to-end without manual intervention.
-   * `SparkSession` is initialized exactly once and passed as a resource through the pipeline modules, preventing memory leaks and overhead from multiple JVM startups.
-2. **Extraction (`download_data.py`):**
-   * Automated batch downloading of raw Parquet files and dimensional CSV lookup tables directly from source URLs.
-3. **Data Cleaning (`clear_data.py`):**
-   * Enforced strict data quality rules: filtered out anomalies such as zero or negative trip distances, empty fares, and transactions falling outside the target analytical window (January 2024).
-4. **Enrichment & Advanced Analytics (`enrich_data.py`):**
-   * **Performance Optimization:** Implemented a **Broadcast Hash Join** (`F.broadcast`) to merge the massive fact table with a dimensional lookup table (Zone IDs). This architecture decision completely eliminated expensive network shuffles.
-   * **Feature Engineering:** Segmented raw timestamps into discrete time-of-day buckets (Morning, Day, Evening, Night). Created a derived business metric, `amount_for_mile`, to evaluate the true economic efficiency of each route.
-   * **Window Functions:** Applied `Window.partitionBy().orderBy()` to accurately rank and extract the Top-5 most profitable routes strictly within each time-of-day segment.
-5. **Data Materialization:**
-   * Forced the distributed Spark DataFrame into a single CSV file using `coalesce(1)` to accommodate downstream analysts using Excel.
-   * Explicitly cast financial metrics to `DecimalType(15, 2)` to guarantee precision and prevent exponential notation artifacts in the final report.
+1. **Dynamic Orchestration & Pre-flight Checks (`main.py`, `check_url.py`):**
+   * Pipeline is fully parameterized via CLI arguments (`--year`, `--month`), allowing dynamic processing of any historical period.
+   * Built-in HTTP pre-flight scanner validates the existence of source data on the NYC Taxi servers before allocating Spark resources, preventing silent failures.
+2. **Extraction & Cleaning (`download_data.py`, `clear_data.py`):**
+   * Automated batch downloading of Parquet files and dimensional lookup tables.
+   * Strict data quality enforcement: filtering out anomalies (negative distances, empty fares) and strictly bounding data to the requested execution month.
+3. **Enrichment & Advanced Analytics (`enrich_data.py`):**
+   * **Performance Optimization:** Implemented **Broadcast Hash Join** (`F.broadcast`) to merge massive fact tables with dimensional lookup zones, eliminating expensive network shuffles.
+   * **Feature Engineering:** Segmented timestamps into discrete time-of-day buckets (Morning, Day, Evening, Night) and derived the `amount_for_mile` metric to evaluate route economic efficiency.
+   * **Window Functions:** Applied `Window.partitionBy().orderBy()` to accurately rank the Top-5 most profitable routes strictly within each time-of-day segment.
+4. **Idempotent Data Materialization (`upload_data.py`):**
+   * Designed a robust, idempotent loading mechanism to PostgreSQL. 
+   * A surgical cleanup operation using `psycopg2` deletes existing records for the target `(year, month)` partition before Spark appends the new data via JDBC. This guarantees zero duplication even with multiple pipeline reruns for the same period.
 
 ## Quick Start
 
+### 1. Build and Initialize Infrastructure
 ```bash
 # Clone the repository
 git clone [https://github.com/GreyFoxRF/ny_taxi_pipeline.git](https://github.com/GreyFoxRF/ny_taxi_pipeline.git)
 cd ny_taxi_pipeline
 
-# Build the Docker image
-docker build -t ny_taxi_pipeline .
+# Start the PostgreSQL database
+docker compose up -d db
 
-# Run the pipeline and extract the Data Mart to your local drive
-docker run --rm -v $(pwd)/data:/app/data ny_taxi_pipeline
-```
+# Build the Spark ETL image
+docker compose build spark_app
+2. Run the Pipeline
+Trigger the pipeline for a specific year and month using the orchestrator container:
 
-## Project Structure
-```
+Bash
+# Example: Process data for February 2024
+docker compose run --rm spark_app python src/main.py --year 2024 --month 02
+Project Structure
+Plaintext
 ny_taxi_pipeline/
 ├── data/
 │   ├── raw/                  # Downloaded raw datasets
-│   ├── processed/            # Cleaned intermediate data (Parquet)
-│   └── report/               # Final Data Mart (CSV)
-├── notebooks/                # EDA with DuckDB and PySpark prototyping
+│   └── processed/            # Cleaned intermediate data (Parquet)
 ├── src/
-│   ├── main.py               # Orchestrator / Entry point
+│   ├── main.py               # Orchestrator / CLI Entry point
+│   ├── check_url.py          # Pre-flight HTTP validation
 │   ├── clear_data.py         # Anomaly filtration module
 │   ├── download_data.py      # Data extraction module
 │   ├── enrich_data.py        # Core ETL, aggregations, and Window functions
-│   └── spark_session.py      # Spark and Arrow configuration
+│   ├── upload_data.py        # PostgreSQL idempotent loader
+│   ├── spark_session.py      # Spark and Arrow configuration
+│   └── logger.py             # Centralized logging configuration
+├── docker-compose.yml        # Multi-container infrastructure setup
+├── Dockerfile                # Spark & Python environment image
 ├── requirements.txt          # Environment dependencies
 └── README.md                 # Project documentation
 ```
