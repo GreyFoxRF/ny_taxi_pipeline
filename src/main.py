@@ -36,7 +36,7 @@ def run(spark):
     download_data(URLS, FILE_PATH)
 
     logger.info("=== ЭТАП 3: ОЧИСТКА ДАННЫХ ===")
-    clean_data(spark)
+    clean_data(spark, args.year, args.month)
 
     logger.info("=== STAGE 4: CREATING THE BUSINESS SHOWCASE ===")
     df = enrich_data(spark, args.year, args.month)
