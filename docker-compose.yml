@@ -22,12 +22,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./src:/app/src    # <--- FOR TEST!
-    environment:
-      # Указываем приложению, где искать базу
-      DB_HOST: db
-      DB_USER: fox
-      DB_PASSWORD: password123
-      DB_NAME: ny_taxi
-
+    env_file:
+      - .env
 volumes:
   pgdata:
